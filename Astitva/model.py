@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import keras
-import numpy as np
 import tensorflow as tf
 from keras.datasets import mnist
 from keras.models import Sequential
@@ -10,15 +8,12 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 (X_train, y_train),(X_test, y_test) = mnist.load_data()
 
-# Normaliization of Image to [0,1] range
 X_train = X_train.astype(np.float32)/255
 X_test = X_test.astype(np.float32)/255
 
-# reshape/expanding the Dimension of image to (28,28,1)
 X_train  = np.expand_dims(X_train, -1)
 X_test = np.expand_dims(X_test, -1)
 
-# Converting Output Variable to one hot vectors 
 y_train = tf.keras.utils.to_categorical(y_train)
 y_test = tf.keras.utils.to_categorical(y_test)
 
@@ -31,9 +26,13 @@ model.add(MaxPool2D((2,2)))
 model.add(Conv2D(64,(3,3), activation='relu'))
 model.add(MaxPool2D((2,2)))
 
+model.add(Conv2D(128,(3,3), activation='relu'))
+model.add(MaxPool2D((2,2)))
+
 model.add(Flatten())
 
 model.add(Dropout(0.25))
+model.add(Dense(100,activation="relu"))
 model.add(Dense(10,activation="softmax"))
 
 model.summary()
@@ -60,7 +59,7 @@ history = model.fit(X_train, y_train, epochs =50 , validation_split =0.3, callba
 model.save("model.h5")
 print("Saved model to disk")
 
-#########################################################   Model Test   #################################################################
+# #########################################################   Model Test   #################################################################
 
 test_images = X_test[1:5]
 test_images = test_images.reshape(test_images.shape[0], 28, 28)
@@ -68,10 +67,6 @@ print ("Test images shape: {}".format(test_images.shape))
 for i, test_image in enumerate(test_images, start=1):
     org_image = test_image
     test_image = test_image.reshape(1,1,28,28)
-    prediction = (model.predict(X_test) > 0.5).astype("int32")
-    print ("Predicted digit: {}".format(prediction[0]))
-    plt.subplot(220+i)
-    plt.axis('off')
-    plt.title("Predicted digit: {}".format(prediction[0]))
-    plt.imshow(org_image, cmap=plt.get_cmap('gray'))
-plt.show()
+    test_image = np.float64(test_image)
+    prediction = (model.predict(test_image) > 0.5)
+    print ("Predicted digit: ",prediction.argmax())
